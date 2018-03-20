@@ -1,5 +1,7 @@
 var request = require('request');
 var secrets = require('./secrets.js');
+var fs = require('fs');
+
 function getRepoContributors(repoOwner, repoName, cb) {
   console.log('Welcome to the GitHub Avatar Downloader!');
   var options = {
@@ -12,33 +14,40 @@ function getRepoContributors(repoOwner, repoName, cb) {
   };
 
 
-  // request(options, function(err, res, body) {
-  //   cb(err, body);
-  //   body.forEach( function (object) {
-  //     console.log(object['avatar_url']);
-
-  //   });
-  // });
+  request(options, function(err, res, body) {
+    cb(err, body);
+  });
 
 }
 
-
-
-getRepoContributors("jquery", "jquery", function(err, result) {
-  console.log("Errors:", err);
-  console.log("Results:", result);
-});
-
-var fs = require('fs');
 function downloadImageByURL(url, filePath) {
-  // filePath = './future.jpg';
+  console.log('starting', filePath);
   request.get(url)
   .on('error', function (err) {
-
     throw err;
-
+  })
+  .on('end', function() {
+    console.log("           ....     finished", filePath);
   })
   .pipe(fs.createWriteStream(filePath));
 }
 
-downloadImageByURL("https://avatars2.githubusercontent.com/u/2741?v=3&s=466", 'avatars/kvirani.jpg');
+
+getRepoContributors("jquery", "jquery", function(err, result) {
+  if(err){
+    console.log("Errors:", err);
+  } else {
+    console.log(" Got results: ", result.length, "proceeding now!");
+  }
+
+  result.forEach(function (object) {
+
+    var login = object.login;
+    downloadImageByURL(object.avatar_url, 'avatars/' + login + '.jpg');
+  });
+
+
+});
+
+
+// downloadImageByURL(uniqueURL, path);
